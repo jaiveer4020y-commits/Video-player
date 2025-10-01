@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            border-radius: 15px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .video-container {
+            background: #1a1a1a;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 500px;
+            background: #000;
+        }
+
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .controls {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ff0000;
+        }
+
+        .input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: #2a2a2a;
+            color: white;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #ff0000;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .primary-button {
+            background: #ff0000;
+            color: white;
+        }
+
+        .primary-button:hover:not(:disabled) {
+            background: #cc0000;
+        }
+
+        .clear-button {
+            background: #6c757d;
+            color: white;
+        }
+
+        .clear-button:hover:not(:disabled) {
+            background: #5a6268;
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .examples {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .examples h3 {
+            margin-bottom: 15px;
+            color: #ff0000;
+        }
+
+        .example-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .example-button {
+            padding: 8px 15px;
+            background: #333;
+            border: none;
+            border-radius: 6px;
+            color: #ff0000;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .example-button:hover {
+            background: #444;
+        }
+
+        .info-container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ff0000;
+        }
+
+        .info-title {
+            color: #ff0000;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .info-text {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .error {
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .video-player {
+                height: 300px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Video Player Web</h1>
+            <p>Stream movies and series directly in your browser</p>
+        </div>
+
+        <div class="video-container">
+            <video id="videoPlayer" class="video-player" controls style="display: none;">
+                Your browser does not support the video tag.
+            </video>
+            <div id="placeholder" class="placeholder">
+                <img src="https://assets.nflxext.com/en_us/pages/wiplayer/site-spinner.png" 
+                     alt="Loading" class="loading-spinner"
+                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzAiIHN0cm9rZT0iI0ZGMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1kYXNoYXJyYXk9IjQ3LjEgMzEuNCI+CiAgPGFuaW1hdGVUcmFuc2Zvcm0gYXR0cmlidXRlTmFtZT0idHJhbnNmb3JtIiB0eXBlPSJyb3RhdGUiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIiBkdXI9IjFzIiB2YWx1ZXM9IjAgMzIgMzI7MzYwIDMyIDMyIiBrZXlUaW1lcz0iMDsxIi8+CjwvY2lyY2xlPgo8L3N2Zz4K'">
+                <h2 id="placeholderText">Ready to Stream</h2>
+                <p>Enter a title below to start watching</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <label class="label">🔍 Search Movie/Series</label>
+                <input type="text" id="titleInput" class="input" 
+                       placeholder="Enter title (e.g., wednesday.s01e03, avengers.endgame)"
+                       onkeypress="handleKeyPress(event)">
+                <p style="margin-top: 10px; opacity: 0.8; font-size: 0.9em;">
+                    Format: movie.name or series.s01e01
+                </p>
+            </div>
+
+            <div class="button-group">
+                <button id="playButton" class="button primary-button" onclick="fetchStream()">
+                    🎯 Play Stream
+                </button>
+                <button class="button clear-button" onclick="clearAll()">
+                    🗑️ Clear
+                </button>
+            </div>
+
+            <div class="examples">
+                <h3>🎯 Quick Play Examples:</h3>
+                <div class="example-buttons">
+                    <button class="example-button" onclick="setExample('wednesday.s01e03')">wednesday.s01e03</button>
+                    <button class="example-button" onclick="setExample('avengers.endgame')">avengers.endgame</button>
+                    <button class="example-button" onclick="setExample('oppenheimer.2023')">oppenheimer.2023</button>
+                    <button class="example-button" onclick="setExample('series.s01e01')">series.s01e01</button>
+                </div>
+            </div>
+
+            <div id="infoContainer" class="info-container" style="display: none;">
+                <h3 class="info-title">📊 Stream Information</h3>
+                <p class="info-text" id="infoVideoId"></p>
+                <p class="info-text" id="infoStatus"></p>
+                <p class="info-text" id="infoReferer"></p>
+            </div>
+        </div>
+
+        <div class="status">
+            <p>🌐 API: <span id="apiUrl">https://u-1-1azw.onrender.com</span></p>
+            <p>⚡ Status: <span id="statusText">Ready</span></p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin;
+        let currentStreamData = null;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                fetchStream();
+            }
+        }
+
+        function setExample(title) {
+            document.getElementById('titleInput').value = title;
+            fetchStream();
+        }
+
+        async function fetchStream() {
+            const title = document.getElementById('titleInput').value.trim();
+            const playButton = document.getElementById('playButton');
+            const statusText = document.getElementById('statusText');
+            const placeholder = document.getElementById('placeholder');
+            const placeholderText = document.getElementById('placeholderText');
+            const videoPlayer = document.getElementById('videoPlayer');
+
+            if (!title) {
+                showError('Please enter a movie/series title');
+                return;
+            }
+
+            // Show loading state
+            playButton.disabled = true;
+            playButton.innerHTML = '<span class="loading"></span> Loading...';
+            statusText.textContent = 'Loading...';
+            hideError();
+            hideInfo();
+
+            placeholderText.textContent = 'Loading Stream...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/proxy-get-stream?title=${encodeURIComponent(title)}`);
+                const data = await response.json();
+
+                console.log('API Response:', data);
+
+                if (data.success) {
+                    currentStreamData = data;
+                    
+                    // Show video player
+                    videoPlayer.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    
+                    // Set video source with headers (headers are handled by the server proxy)
+                    videoPlayer.src = data.m3u8_url;
+                    
+                    // Show stream info
+                    showInfo(data);
+                    statusText.textContent = 'Playing';
+                    
+                    // Auto play
+                    videoPlayer.play().catch(e => {
+                        console.log('Auto-play failed:', e);
+                    });
+                } else {
+                    showError(data.error || 'Failed to get stream');
+                    statusText.textContent = 'Error';
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+                statusText.textContent = 'Error';
+            } finally {
+                // Reset button
+                playButton.disabled = false;
+                playButton.textContent = '🎯 Play Stream';
+            }
+        }
+
+        function showInfo(data) {
+            const infoContainer = document.getElementById('infoContainer');
+            const infoVideoId = document.getElementById('infoVideoId');
+            const infoStatus = document.getElementById('infoStatus');
+            const infoReferer = document.getElementById('infoReferer');
+
+            infoVideoId.textContent = `🎮 Video ID: ${data.video_id}`;
+            infoStatus.textContent = `✅ Status: Playing with extracted headers`;
+            infoReferer.textContent = `📡 Referer: ${data.headers.Referer}`;
+
+            infoContainer.style.display = 'block';
+        }
+
+        function hideInfo() {
+            document.getElementById('infoContainer').style.display = 'none';
+        }
+
+        function showError(message) {
+            // Remove existing error
+            hideError();
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.id = 'errorMessage';
+            errorDiv.textContent = `❌ ${message}`;
+            
+            document.querySelector('.controls').insertBefore(errorDiv, document.querySelector('.button-group'));
+        }
+
+        function hideError() {
+            const existingError = document.getElementById('errorMessage');
+            if (existingError) {
+                existingError.remove();
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('titleInput').value = '';
+            document.getElementById('statusText').textContent = 'Ready';
+            hideError();
+            hideInfo();
+            
+            const videoPlayer = document.getElementById('videoPlayer');
+            const placeholder = document.getElementById('placeholder');
+            
+            videoPlayer.style.display = 'none';
+            videoPlayer.src = '';
+            placeholder.style.display = 'flex';
+            document.getElementById('placeholderText').textContent = 'Ready to Stream';
+            
+            currentStreamData = null;
+        }
+
+        // Video player event listeners
+        document.getElementById('videoPlayer').addEventListener('error', function(e) {
+            console.error('Video error:', e);
+            showError('Failed to play video stream. The video might be unavailable.');
+        });
+
+        document.getElementById('videoPlayer').addEventListener('loadeddata', function() {
+            console.log('Video loaded successfully');
+        });
+    </script>
+</body>
+  </html>
