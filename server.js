@@ -1,40 +1,51 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  Dimensions,
-  ActivityIndicator,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  StatusBar,
-} from 'react-native';
-import Video from 'react-native-video';
-import VideoPlayer from 'react-native-video-controls';
-import Orientation from 'react-native-orientation-locker';
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const { width } = Dimensions.get('window');
-const VIDEO_HEIGHT = width * (9 / 16);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Your working API
-const API_BASE_URL = 'https://u-1-1azw.onrender.com';
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const VideoPlayerApp = () => {
-  const [streamData, setStreamData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [title, setTitle] = useState('');
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const videoRef = useRef(null);
+// Middleware
+app.use(cors());
+app.use(express.static('public'));
+app.use(express.json());
 
-  const fetchStream = async () => {
-    if (!title.trim()) {
-      Alert.alert('Error', 'Please enter movie/series title');
-      return;
+// Serve the main page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Proxy API endpoint to avoid CORS issues
+app.get('/api/proxy-get-stream', async (req, res) => {
+  try {
+    const { title } = req.query;
+    
+    if (!title) {
+      return res.json({ success: false, error: 'Title parameter required' });
     }
 
+    const response = await fetch(`https://u-1-1azw.onrender.com/api/get-stream?title=${encodeURIComponent(title)}`);
+    const data = await response.json();
+    
+    res.json(data);
+  } catch (error) {
+    res.json({ success: false, error: error.message });
+  }
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', service: 'Video Player Web' });
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📱 Video Player Web: http://localhost:${PORT}`);
+});
     setLoading(true);
     setError(null);
     setStreamData(null);
